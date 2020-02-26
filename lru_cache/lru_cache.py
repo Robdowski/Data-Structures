@@ -1,10 +1,4 @@
-class ListNode:
-    def __init__(self, key, val, prev=None, next=None):
-        self.key = key
-        self.val = val
-        self.next = next
-        self.prev = prev
-
+from doubly_linked_list import *
 
 class LRUCache:
     """
@@ -15,11 +9,10 @@ class LRUCache:
     to every node stored in the cache.
     """
     def __init__(self, limit=10):
+        self.limit = limit
         self.size = 0
         self.storage = {}
-        self.limit = limit
-        self.head = None
-        self.tail = None
+        self.order = DoublyLinkedList()
 
 
     """
@@ -31,11 +24,11 @@ class LRUCache:
     """
     def get(self, key):
         if key in self.storage:
-            self.getNodeHelper(self.storage[key])
-            return self.storage[key].val
+            node = self.storage[key]
+            self.order.move_to_end(node)
+            return node.value[1]
         else:
             return None
-
     """
     Adds the given key-value pair to the cache. The newly-
     added pair should be considered the most-recently used
@@ -47,44 +40,25 @@ class LRUCache:
     the newly-specified value.
     """
     def set(self, key, value):
-
         if key in self.storage:
-            node = ListNode(key, value)
-            self.storage[key].val = value
+            node = self.storage[key]
 
-        else:
-            node = ListNode(key, value)
-            self.storage[key] = node
+            node.value = (key, value)
 
-            if self.size == 0:
-                self.head = node
-                self.tail = node
+            self.order.move_to_end(node)
 
-            if self.size < self.limit:
-                self.size += 1
-            elif self.size == self.limit:
-                tail_key = self.tail.key
-                
-                self.tail = self.tail.prev
-                self.tail.next = None
-            
-                del self.storage[tail_key]
-
-    def getNodeHelper(self, node):
-        if node is self.head: ## Don't need to do anything if it's the head
             return
-
-        if node is self.tail: ## Chop off the tail, new tail is next
-            self.tail = self.tail.prev
-
-        if node.next is not None: ## If next node is defined
-            node.next.prev = node.prev
         
-        if node.prev is not None: ## If prev node is defined
-            node.prev.next = node.next
-        
-        self.head.prev = node ## Put node at beginning, switch w/ head
-        node.next = self.head
-        node.prev = None
-        self.head = node
+        if self.size == self.limit:
+            del self.storage[self.order.head.value[0]]
+            self.order.remove_from_head()
+            self.size -= 1
+
+
+        self.order.add_to_tail((key, value))
+        self.storage[key] = self.order.tail
+        self.size += 1
+
+
+
         
